@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Animal Rescue</title>
+</head>
+<body>
+  <h2>Report Animal Rescue</h2>
+
+  <form id="rescueForm">
+    <label>Animal Type:</label>
+    <input type="text" id="animalType" required><br><br>
+
+    <label>Manual Location:</label>
+    <input type="text" id="location" required><br><br>
+
+    <label>Latitude:</label>
+    <input type="text" id="latitude" required><br><br>
+
+    <label>Longitude:</label>
+    <input type="text" id="longitude" required><br><br>
+
+    <button type="button" onclick="getLocation()">Get Live Location</button>
+    <button type="submit">Submit</button>
+  </form>
+
+  <h3>Rescue Requests</h3>
+  <table border="1">
+    <thead>
+      <tr>
+        <th>Animal Type</th>
+        <th>Location</th>
+        <th>Latitude</th>
+        <th>Longitude</th>
+      </tr>
+    </thead>
+    <tbody id="rescueList"></tbody>
+  </table>
+
+  <script>
+    // ✅ Fix: Get live location with error handling
+    function getLocation() {
+      if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(
+          function (position) {
+            document.getElementById("latitude").value = position.coords.latitude;
+            document.getElementById("longitude").value = position.coords.longitude;
+          },
+          function (error) {
+            alert("Location Error: " + error.message);
+          }
+        );
+      } else {
+        alert("Geolocation not supported by this browser.");
+      }
+    }
+
+    // ✅ Form submit without page refresh
+    document.getElementById("rescueForm").addEventListener("submit", function (event) {
+      event.preventDefault();
+
+      const data = {
+        animalType: document.getElementById("animalType").value,
+        location: document.getElementById("location").value,
+        latitude: document.getElementById("latitude").value,
+        longitude: document.getElementById("longitude").value
+      };
+
+      fetch("/rescue", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data)
+      })
+      .then(res => res.json())
+      .then(rescue => {
+        const row = `<tr>
+          <td>${rescue.animalType}</td>
+          <td>${rescue.location}</td>
+          <td>${rescue.latitude}</td>
+          <td>${rescue.longitude}</td>
+        </tr>`;
+        document.getElementById("rescueList").innerHTML += row;
+
+        document.getElementById("rescueForm").reset();
+      })
+      .catch(err => alert("Error submitting data: " + err));
+    });
+  </script>
+</body>
+</html>
